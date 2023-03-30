@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { MdSearch } from "react-icons/md";
-import SearchBucket from "./SearchBucket";
+import { AiOutlinePlus } from "react-icons/ai";
+import ManageSearchBucket from "./ManageSearchBucket";
 import axios from "axios";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { reBucketList } from "../../redux/user";
 
 const SearchBox = styled.div`
   width: 80%;
@@ -11,7 +12,6 @@ const SearchBox = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 40px;
   position: relative;
 `;
 
@@ -23,6 +23,7 @@ const InputBox = styled.div`
   align-items: center;
   justify-content: space-between;
   background: #ffffff;
+  box-shadow: 0px 4px 4px rgba(182, 86, 86, 0.25);
 `;
 
 const SearchInput = styled.input`
@@ -59,39 +60,55 @@ const SearchResult = styled.div`
   z-index: 10;
   top: 36px;
   background: #ffffff;
+  box-shadow: 0px 4px 4px rgba(182, 86, 86, 0.25);
 `;
 
-export default function SearchBar(props) {
+export default function SearchBar() {
   const [buckets, setBuckets] = useState([]);
   const [value, setValue] = useState("");
   const { user } = useSelector(state => state);
   const bucketListId = user.value.selectedBucketlist.pk;
+  const dispatch = useDispatch();
 
   const searchBucket = event => {
-    setValue(event.target.value);
-    if (event.target.value.length > 0) {
-      const params = { q: event.target.value, bucketlist: bucketListId };
+    const inputValue = event.target.value;
+    setValue(inputValue);
+    if (inputValue.length > 0) {
+      const params = { q: inputValue, bucketlist: bucketListId };
       axios
         .get("https://j8b104.p.ssafy.io/api/buckets/search", {
           params: params,
           headers: {
             Authorization: `Bearer ${user.value.token}`,
           },
-          params: params,
         })
         .then(res => setBuckets(res.data.data.content))
         .catch(err => console.log(err));
+    } else {
+      setBuckets([]);
     }
   };
 
   const onKeyPress = event => {
     if (event.key === "Enter") {
-      search();
+      addBucket(event);
     }
   };
 
-  const search = () => {
-    props.search(buckets);
+  const addBucket = event => {
+    const inputValue = event.target.value;
+    axios
+      .post(
+        `https://j8b104.p.ssafy.io/api/bucketlists/${bucketListId}/buckets`,
+        { title: inputValue },
+        {
+          headers: {
+            Authorization: `Bearer ${user.value.token}`,
+          },
+        },
+      )
+      .then(res => dispatch(reBucketList(res.data.data)))
+      .catch(err => console.log(err));
     setValue("");
     setBuckets([]);
   };
@@ -100,11 +117,11 @@ export default function SearchBar(props) {
     <SearchBox>
       <InputBox>
         <SearchInput onChange={searchBucket} value={value} onKeyPress={onKeyPress} />
-        <SearchIcon onClick={search}>
-          <MdSearch className="searchIcon" />
+        <SearchIcon onClick={addBucket}>
+          <AiOutlinePlus className="searchIcon" />
         </SearchIcon>
       </InputBox>
-      <SearchResult>{buckets.length !== 0 && buckets.map(bucket => <SearchBucket bucket={bucket} key={bucket.publicBucketSeq} />)}</SearchResult>
+      <SearchResult>{buckets.length !== 0 ? buckets.map(buck => <ManageSearchBucket bucket={buck} key={buck.publicBucketSeq} />) : null}</SearchResult>
     </SearchBox>
   );
 }

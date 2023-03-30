@@ -30,7 +30,8 @@ export default function SearchPage() {
   const [selectCate, setSelectCate] = useState("전체");
   const [buckets, setBuckets] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [ref, inView] = useInView();
+  const [ref] = useInView();
+  // const [ref, inView] = useInView();
   const { user } = useSelector(state => state);
 
   const changeCate = categoryName => {
@@ -49,8 +50,16 @@ export default function SearchPage() {
     setLoading(false);
   };
 
+  const search = buckets => {
+    setLoading(true);
+    setBuckets(buckets);
+    setSelectCate("");
+    setLoading(false);
+  };
+
   useEffect(() => {
     const params = { category: selectCate };
+    setLoading(true);
     axios
       .get("https://j8b104.p.ssafy.io/api/recomm/buckets", {
         params: params,
@@ -60,6 +69,7 @@ export default function SearchPage() {
       })
       .then(res => setBuckets(res.data))
       .catch(err => console.log(err));
+    setLoading(false);
   }, []);
 
   // const addBuckets = useCallback(async () => {
@@ -74,7 +84,7 @@ export default function SearchPage() {
 
   return (
     <Div>
-      <SearchBar />
+      <SearchBar search={search} />
       <Categorys>
         {cate.map(data => (
           <Category
@@ -87,7 +97,7 @@ export default function SearchPage() {
         ))}
       </Categorys>
       <Banner />
-      {buckets.length !== 0 ? buckets.map(bucket => <RecommBucket bucket={bucket} key={bucket.seq} />) : null}
+      {buckets.length !== 0 ? buckets.map(bucket => <RecommBucket bucket={bucket} key={bucket.publicBucketSeq} />) : null}
       {loading && <RefreshIcon ref={ref} />}
       <SlideUp />
     </Div>

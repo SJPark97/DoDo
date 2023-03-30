@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { useSelector } from "react-redux";
 
 const Div = styled.div`
   position: sticky;
@@ -57,17 +58,17 @@ const FilterDiv = styled.div`
 `;
 
 export default function ManageHeader(props) {
-  const { bucketListImg, bucketListTitle, pageFilter } = props;
+  const { pageFilter } = props;
+  const { user } = useSelector(state => state);
+  const info = user.bucketList.info;
   const changePageFilter = fil => {
     props.propFunction(fil);
   };
   return (
     <Div>
       <Header>
-        {/* <Img src={bucketListImg} /> */}
-        <Img src={"https://images.pexels.com/photos/177809/pexels-photo-177809.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"} />
-        {/* <Title>{bucketListTitle}</Title> */}
-        <Title>죽기전에 해야 할 100가지 버킷리스트</Title>
+        <Img src={info.image} />
+        <Title>{info.title}</Title>
       </Header>
       <Filter>
         <FilterDiv select={pageFilter === "bucketList"} onClick={() => changePageFilter("bucketList")}>
